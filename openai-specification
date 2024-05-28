@@ -1,0 +1,114 @@
+openapi: 3.0.0
+info:
+  title: SSH Service API
+  description: API for SSH operations on a server with basic authentication.
+  version: 1.0.0
+servers:
+  - url: http://ip-address/v1
+    description: SSH GPT server
+paths:
+  /ssh/connect:
+    post:
+      operationId: connectSSH
+      summary: Establish an SSH connection.
+      security:
+        - basicAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                hostname:
+                  type: string
+                  example: "192.168.1.1"
+                port:
+                  type: integer
+                  example: 22
+                username:
+                  type: string
+                  example: "user"
+                password:
+                  type: string
+                  example: "password"
+                privateKey:
+                  type: string
+                  example: "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANB..."
+      responses:
+        '200':
+          description: SSH connection established
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sessionId:
+                    type: string
+                    example: "abc123"
+        '400':
+          description: Bad request (invalid parameters)
+        '401':
+          description: Unauthorized (invalid credentials)
+  /ssh/execute:
+    post:
+      operationId: executeCommand
+      summary: Execute a command on the server.
+      security:
+        - basicAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sessionId:
+                  type: string
+                  example: "abc123"
+                command:
+                  type: string
+                  example: "ls -la"
+      responses:
+        '200':
+          description: Command executed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  output:
+                    type: string
+                    example: "total 12\ndrwxr-xr-x 2 user user 4096 May 28 12:34 .\ndrwxr-xr-x 3 user user 4096 May 28 12:34 .."
+        '400':
+          description: Bad request (invalid parameters)
+        '404':
+          description: Not found (invalid sessionId)
+  /ssh/disconnect:
+    post:
+      operationId: disconnectSSH
+      summary: Close the SSH connection.
+      security:
+        - basicAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sessionId:
+                  type: string
+                  example: "abc123"
+      responses:
+        '200':
+          description: SSH connection closed
+        '400':
+          description: Bad request (invalid parameters)
+        '404':
+          description: Not found (invalid sessionId)
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
