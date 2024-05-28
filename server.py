@@ -1,12 +1,25 @@
 from flask import Flask, request, jsonify
+from flask_httpauth import HTTPBasicAuth
 import paramiko
 import uuid
 
 app = Flask(__name__)
+auth = HTTPBasicAuth()
+
+# Replace with your own user credentials
+users = {
+    "user": "password"
+}
+
+@auth.verify_password
+def verify_password(username, password):
+    if username in users and users[username] == password:
+        return username
 
 sessions = {}
 
 @app.route('/ssh/connect', methods=['POST'])
+@auth.login_required
 def connect_ssh():
     data = request.json
     hostname = data.get('hostname')
@@ -32,6 +45,7 @@ def connect_ssh():
         return jsonify({'error': str(e)}), 400
 
 @app.route('/ssh/execute', methods=['POST'])
+@auth.login_required
 def execute_command():
     data = request.json
     session_id = data.get('sessionId')
@@ -49,6 +63,7 @@ def execute_command():
         return jsonify({'error': str(e)}), 400
 
 @app.route('/ssh/disconnect', methods=['POST'])
+@auth.login_required
 def disconnect_ssh():
     data = request.json
     session_id = data.get('sessionId')
